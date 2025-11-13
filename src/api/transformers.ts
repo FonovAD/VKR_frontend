@@ -2,6 +2,7 @@ import type { Organization } from '@/types/organization'
 import type { Museum } from '@/types/museum'
 import type { Activity } from '@/types/activity'
 import type { LaborData, LaborFOT } from '@/types/labor'
+import type { PaginatedResponse } from '@/types/pagination'
 
 interface BackendOrganization {
   ID: number
@@ -149,6 +150,66 @@ export function transformActivity(backend: BackendActivity): Activity {
 
 export function transformActivityList(backend: BackendActivity[]): Activity[] {
   return backend.map(transformActivity)
+}
+
+interface BackendPaginatedOrganizationResponse {
+  data: BackendOrganization[]
+  page: number
+  page_size: number
+  total_count: number
+  total_pages: number
+}
+
+interface BackendPaginatedMuseumResponse {
+  data: BackendMuseum[]
+  page: number
+  page_size: number
+  total_count: number
+  total_pages: number
+}
+
+interface BackendPaginatedActivityResponse {
+  data: BackendActivity[]
+  page: number
+  page_size: number
+  total_count: number
+  total_pages: number
+}
+
+export function transformPaginatedOrganizations(
+  backend: BackendPaginatedOrganizationResponse,
+): PaginatedResponse<Organization> {
+  return {
+    data: backend.data.map(transformOrganization),
+    page: backend.page,
+    page_size: backend.page_size,
+    total_count: backend.total_count,
+    total_pages: backend.total_pages,
+  }
+}
+
+export function transformPaginatedMuseums(
+  backend: BackendPaginatedMuseumResponse,
+): PaginatedResponse<Museum> {
+  return {
+    data: backend.data.map(transformMuseum),
+    page: backend.page,
+    page_size: backend.page_size,
+    total_count: backend.total_count,
+    total_pages: backend.total_pages,
+  }
+}
+
+export function transformPaginatedActivities(
+  backend: BackendPaginatedActivityResponse,
+): PaginatedResponse<Activity> {
+  return {
+    data: backend.data.map(transformActivity),
+    page: backend.page,
+    page_size: backend.page_size,
+    total_count: backend.total_count,
+    total_pages: backend.total_pages,
+  }
 }
 
 export function transformLabor(backend: BackendLabor): LaborData {

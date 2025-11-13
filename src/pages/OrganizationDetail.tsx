@@ -167,12 +167,6 @@ export default function OrganizationDetail() {
       <div className="bg-white shadow-sm rounded-lg border border-gray-200 p-6 mb-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-medium text-gray-900">Музеи организации</h2>
-          <Link
-            to="/museums/create"
-            className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 text-sm font-medium"
-          >
-            Добавить музей
-          </Link>
         </div>
 
         {museums.length === 0 ? (

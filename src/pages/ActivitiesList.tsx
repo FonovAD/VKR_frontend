@@ -3,24 +3,28 @@ import { Link } from 'react-router-dom'
 import { activitiesApi, organizationsApi } from '@/api/client'
 import type { Activity } from '@/types/activity'
 import type { Organization } from '@/types/organization'
+import type { PaginatedResponse } from '@/types/pagination'
+import Pagination from '@/components/Pagination'
 
 export default function ActivitiesList() {
-  const [activities, setActivities] = useState<Activity[]>([])
+  const [pagination, setPagination] = useState<PaginatedResponse<Activity> | null>(null)
   const [owners, setOwners] = useState<Record<number, Organization>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   useEffect(() => {
     loadActivities()
-  }, [])
+  }, [page, pageSize])
 
   const loadActivities = async () => {
     try {
       setLoading(true)
       setError(null)
-      const data = await activitiesApi.getAll()
-      setActivities(data)
-      await loadOwners(data)
+      const result = await activitiesApi.getPaginated({ page, page_size: pageSize })
+      setPagination(result)
+      await loadOwners(result.data)
     } catch (err: any) {
       setError(err.response?.data?.error || 'Ошибка при загрузке деятельности')
       console.error('Error loading activities:', err)
@@ -62,13 +66,20 @@ export default function ActivitiesList() {
 
     try {
       await activitiesApi.delete(activity.id)
-      const updated = activities.filter(a => a.id !== activity.id)
-      setActivities(updated)
-      await loadOwners(updated)
+      loadActivities()
     } catch (err: any) {
       alert(err.response?.data?.error || 'Ошибка при удалении деятельности')
       console.error('Error deleting activity:', err)
     }
+  }
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage)
+  }
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize)
+    setPage(1)
   }
 
   if (loading) {
@@ -98,6 +109,8 @@ export default function ActivitiesList() {
     )
   }
 
+  const activities = pagination?.data || []
+
   return (
     <div className="px-4 sm:px-6 lg:px-8">
       <div className="sm:flex sm:items-center">
@@ -107,119 +120,115 @@ export default function ActivitiesList() {
             Список всех записей о деятельности музеев
           </p>
         </div>
-        <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-          <Link
-            to="/activities/create"
-            className="block rounded-md bg-primary-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-primary-500"
-          >
-            Добавить деятельность
-          </Link>
-        </div>
       </div>
 
-      {activities.length === 0 ? (
+      {activities.length === 0 && !loading ? (
         <div className="mt-8 text-center py-12 bg-white rounded-lg border border-gray-200">
-          <p className="text-gray-500 mb-4">Записей о деятельности пока нет</p>
-          <Link
-            to="/activities/create"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"
-          >
-            Добавить первую запись
-          </Link>
+          <p className="text-gray-500">Записей о деятельности пока нет</p>
         </div>
       ) : (
-        <div className="mt-8 flow-root">
-          <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-              <table className="min-w-full divide-y divide-gray-300">
-                <thead>
-                  <tr>
-                    <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">
-                      Организация
-                    </th>
-                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      ИНН
-                    </th>
-                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Год
-                    </th>
-                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 min-w-[200px] max-w-[300px]">
-                      Тип деятельности
-                    </th>
-                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Категория посетителей
-                    </th>
-                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Всего
-                    </th>
-                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Выручка
-                    </th>
-                    <th className="relative py-3.5 pl-3 pr-4 sm:pr-0">
-                      <span className="sr-only">Действия</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {activities.map((activity) => (
-                    <tr key={activity.id}>
-                      <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
-                        {owners[activity.id_owner] ? (
-                          <Link
-                            to={`/organizations/${owners[activity.id_owner].id}`}
-                            className="text-primary-600 hover:text-primary-900"
-                          >
-                            {owners[activity.id_owner].name}
-                          </Link>
-                        ) : (
-                          <span className="text-gray-500">—</span>
-                        )}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {activity.inn}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {activity.year}
-                      </td>
-                      <td className="px-3 py-4 text-sm text-gray-700 whitespace-normal break-words max-w-[300px]">
-                        <div className="leading-relaxed">
-                          {activity.custom_activity_name || activity.activity_type_name || 
-                           (activity.custom_activity_id ? `Кастомный тип #${activity.custom_activity_id}` : 
-                            activity.activity_type_id ? `Тип #${activity.activity_type_id}` : 'Тип не указан')}
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {activity.visitor_category}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {activity.total_count || '-'}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {activity.revenue_amount || '-'}
-                      </td>
-                      <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
-                        <div className="flex justify-end gap-2">
-                          <Link
-                            to={`/activities/edit?id=${activity.id}`}
-                            className="text-primary-600 hover:text-primary-900"
-                          >
-                            Редактировать
-                          </Link>
-                          <button
-                            onClick={() => handleDelete(activity)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            Удалить
-                          </button>
-                        </div>
-                      </td>
+        <>
+          <div className="mt-8 flow-root">
+            <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+              <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                <table className="min-w-full divide-y divide-gray-300">
+                  <thead>
+                    <tr>
+                      <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">
+                        Организация
+                      </th>
+                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                        ИНН
+                      </th>
+                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                        Год
+                      </th>
+                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 min-w-[200px] max-w-[300px]">
+                        Тип деятельности
+                      </th>
+                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                        Категория посетителей
+                      </th>
+                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                        Всего
+                      </th>
+                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                        Выручка
+                      </th>
+                      <th className="relative py-3.5 pl-3 pr-4 sm:pr-0">
+                        <span className="sr-only">Действия</span>
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {activities.map((activity) => (
+                      <tr key={activity.id}>
+                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
+                          {owners[activity.id_owner] ? (
+                            <Link
+                              to={`/organizations/${owners[activity.id_owner].id}`}
+                              className="text-primary-600 hover:text-primary-900"
+                            >
+                              {owners[activity.id_owner].name}
+                            </Link>
+                          ) : (
+                            <span className="text-gray-500">—</span>
+                          )}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          {activity.inn}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          {activity.year}
+                        </td>
+                        <td className="px-3 py-4 text-sm text-gray-700 whitespace-normal break-words max-w-[300px]">
+                          <div className="leading-relaxed">
+                            {activity.custom_activity_name || activity.activity_type_name || 
+                             (activity.custom_activity_id ? `Кастомный тип #${activity.custom_activity_id}` : 
+                              activity.activity_type_id ? `Тип #${activity.activity_type_id}` : 'Тип не указан')}
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          {activity.visitor_category}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          {activity.total_count || '-'}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          {activity.revenue_amount || '-'}
+                        </td>
+                        <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
+                          <div className="flex justify-end gap-2">
+                            <Link
+                              to={`/activities/edit?id=${activity.id}`}
+                              className="text-primary-600 hover:text-primary-900"
+                            >
+                              Редактировать
+                            </Link>
+                            <button
+                              onClick={() => handleDelete(activity)}
+                              className="text-red-600 hover:text-red-900"
+                            >
+                              Удалить
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
+
+          {pagination && (
+            <Pagination
+              pagination={pagination}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+            />
+          )}
+        </>
       )}
     </div>
   )

@@ -9,7 +9,7 @@ export default function Home() {
             Система управления музеями
           </h1>
           <p className="text-xl text-gray-600 mb-8">
-            Управление организациями, музеями и их деятельностью
+            Просмотр информации о музеях при ВУЗах
           </p>
         </div>
 
@@ -49,29 +49,6 @@ export default function Home() {
               Учет различных видов деятельности музеев
             </p>
           </Link>
-        </div>
-
-        <div className="mt-8 text-center">
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link
-              to="/organizations/create"
-              className="px-6 py-3 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 font-medium"
-            >
-              Создать организацию
-            </Link>
-            <Link
-              to="/museums/create"
-              className="px-6 py-3 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 font-medium"
-            >
-              Создать музей
-            </Link>
-            <Link
-              to="/activities/create"
-              className="px-6 py-3 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 font-medium"
-            >
-              Добавить деятельность
-            </Link>
-          </div>
         </div>
       </div>
     </div>

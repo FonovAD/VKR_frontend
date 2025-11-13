@@ -3,6 +3,7 @@ import type { Organization, CreateOrganizationDTO, UpdateOrganizationDTO } from 
 import type { Museum, CreateMuseumDTO, UpdateMuseumDTO } from '@/types/museum'
 import type { Activity, CreateActivityDTO, UpdateActivityDTO } from '@/types/activity'
 import type { LaborData } from '@/types/labor'
+import type { PaginatedResponse, PaginationParams, OrganizationFilters, MuseumFilters } from '@/types/pagination'
 import {
   transformOrganization,
   transformOrganizationList,
@@ -10,6 +11,9 @@ import {
   transformMuseumList,
   transformActivityList,
   transformLabor,
+  transformPaginatedOrganizations,
+  transformPaginatedMuseums,
+  transformPaginatedActivities,
 } from './transformers'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1'
@@ -26,6 +30,16 @@ export const organizationsApi = {
   getAll: async (): Promise<Organization[]> => {
     const response = await apiClient.get('/organization')
     return transformOrganizationList(response.data)
+  },
+
+  getPaginated: async (params?: OrganizationFilters): Promise<PaginatedResponse<Organization>> => {
+    const queryParams = new URLSearchParams()
+    if (params?.page) queryParams.append('page', params.page.toString())
+    if (params?.page_size) queryParams.append('page_size', params.page_size.toString())
+    if (params?.name) queryParams.append('name', params.name)
+
+    const response = await apiClient.get(`/organization?${queryParams.toString()}`)
+    return transformPaginatedOrganizations(response.data)
   },
 
   getById: async (id: number): Promise<Organization> => {
@@ -58,6 +72,17 @@ export const museumsApi = {
   getAll: async (): Promise<Museum[]> => {
     const response = await apiClient.get('/museum')
     return transformMuseumList(response.data)
+  },
+
+  getPaginated: async (params?: MuseumFilters): Promise<PaginatedResponse<Museum>> => {
+    const queryParams = new URLSearchParams()
+    if (params?.page) queryParams.append('page', params.page.toString())
+    if (params?.page_size) queryParams.append('page_size', params.page_size.toString())
+    if (params?.name) queryParams.append('name', params.name)
+    if (params?.museum_type) queryParams.append('museum_type', params.museum_type)
+
+    const response = await apiClient.get(`/museum?${queryParams.toString()}`)
+    return transformPaginatedMuseums(response.data)
   },
 
   getById: async (id: number): Promise<Museum> => {
@@ -95,6 +120,15 @@ export const activitiesApi = {
   getAll: async (): Promise<Activity[]> => {
     const response = await apiClient.get('/activity')
     return transformActivityList(response.data)
+  },
+
+  getPaginated: async (params?: PaginationParams): Promise<PaginatedResponse<Activity>> => {
+    const queryParams = new URLSearchParams()
+    if (params?.page) queryParams.append('page', params.page.toString())
+    if (params?.page_size) queryParams.append('page_size', params.page_size.toString())
+
+    const response = await apiClient.get(`/activity?${queryParams.toString()}`)
+    return transformPaginatedActivities(response.data)
   },
 
   getByINN: async (inn: string): Promise<Activity[]> => {

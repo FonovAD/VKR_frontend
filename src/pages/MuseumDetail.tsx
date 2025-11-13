@@ -159,12 +159,6 @@ export default function MuseumDetail() {
       <div className="mt-6 bg-white shadow-sm rounded-lg border border-gray-200 p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-medium text-gray-900">Деятельность</h2>
-          <Link
-            to="/activities/create"
-            className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 text-sm font-medium"
-          >
-            Добавить деятельность
-          </Link>
         </div>
 
         {activities.length === 0 ? (
